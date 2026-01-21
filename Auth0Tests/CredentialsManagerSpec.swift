@@ -521,6 +521,20 @@ class CredentialsManagerSpec: QuickSpec {
                     }
                 }
 
+                it("should not renew if not enabled") {
+                    credentialsManager = CredentialsManager(authentication: authentication,
+                                                            storage: SimpleKeychain(),
+                                                            allowsAutoRefreshing: false)
+                    credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IdToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -ExpiresIn))
+                    _ = credentialsManager.store(credentials: credentials)
+                    waitUntil(timeout: Timeout) { done in
+                        credentialsManager.credentials { result in
+                            expect(result).to(haveCredentialsManagerError(.renewNotSupported))
+                            done()
+                        }
+                    }
+                }
+
                 it("should store new credentials") {
                     let store = SimpleKeychain()
                     credentialsManager = CredentialsManager(authentication: authentication, storage: store)
@@ -828,6 +842,19 @@ class CredentialsManagerSpec: QuickSpec {
                 waitUntil(timeout: Timeout) { done in
                     credentialsManager.renew { result in
                         expect(result).to(haveCredentials(NewAccessToken, NewIdToken, NewRefreshToken))
+                        done()
+                    }
+                }
+            }
+
+            it("should not renew if not enabled") {
+                credentialsManager = CredentialsManager(authentication: authentication,
+                                                        storage: SimpleKeychain(),
+                                                        allowsAutoRefreshing: false)
+                _ = credentialsManager.store(credentials: credentials)
+                waitUntil(timeout: Timeout) { done in
+                    credentialsManager.renew { result in
+                        expect(result).to(haveCredentialsManagerError(.renewNotSupported))
                         done()
                     }
                 }
