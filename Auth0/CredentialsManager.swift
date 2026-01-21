@@ -319,7 +319,8 @@ public struct CredentialsManager {
     }
     #endif
 
-    /// Renews credentials using the refresh token and stores them in the Keychain. **This method is thread-safe**.
+    /// Renews credentials using the refresh token and stores them in the Keychain. If token renewal is disabled, the
+    /// callback will be called with a ``CredentialsManagerError/renewNotSupported`` error. **This method is thread-safe**.
     ///
     /// ## Usage
     ///

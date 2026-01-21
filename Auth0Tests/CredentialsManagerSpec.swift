@@ -847,6 +847,19 @@ class CredentialsManagerSpec: QuickSpec {
                 }
             }
 
+            it("should not renew if not enabled") {
+                credentialsManager = CredentialsManager(authentication: authentication,
+                                                        storage: SimpleKeychain(),
+                                                        allowsTokenRenewal: false)
+                _ = credentialsManager.store(credentials: credentials)
+                waitUntil(timeout: Timeout) { done in
+                    credentialsManager.renew { result in
+                        expect(result).to(haveCredentialsManagerError(.renewNotSupported))
+                        done()
+                    }
+                }
+            }
+
             it("should store new credentials") {
                 let store = SimpleKeychain()
                 credentialsManager = CredentialsManager(authentication: authentication, storage: store)
