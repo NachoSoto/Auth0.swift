@@ -24,6 +24,7 @@ public struct CredentialsManager {
     private let storage: CredentialsStorage
     private let storeKey: String
     private let authentication: Authentication
+    private let allowsAutoRefreshing: Bool
     private let dispatchQueue = DispatchQueue(label: "com.auth0.credentialsmanager.serial")
     private let dispatchGroup = DispatchGroup()
     #if WEB_AUTH_PLATFORM
@@ -36,12 +37,15 @@ public struct CredentialsManager {
     ///   - authentication: Auth0 Authentication API client.
     ///   - storeKey:       Key used to store user credentials in the Keychain. Defaults to 'credentials'.
     ///   - storage:        The ``CredentialsStorage`` instance used to manage credentials storage. Defaults to a standard `SimpleKeychain` instance.
+    ///   - allowsAutoRefreshing: If `true` (the default), `CredentialsManager` will automatically attempt to refresh credentials using a refresh token.
     public init(authentication: Authentication,
                 storeKey: String = "credentials",
-                storage: CredentialsStorage = SimpleKeychain()) {
+                storage: CredentialsStorage = SimpleKeychain(),
+                allowsAutoRefreshing: Bool = true) {
         self.storeKey = storeKey
         self.authentication = authentication
         self.storage = storage
+        self.allowsAutoRefreshing = allowsAutoRefreshing
     }
 
     /// Retrieves the user information from the Keychain synchronously, without checking if the credentials are expired.
@@ -220,7 +224,7 @@ public struct CredentialsManager {
     /// - Returns: If there are credentials stored containing a refresh token.
     public func canRenew() -> Bool {
         guard let credentials = self.retrieveCredentials() else { return false }
-        return credentials.refreshToken != nil
+        return self.allowsAutoRefreshing && credentials.refreshToken != nil
     }
 
     #if WEB_AUTH_PLATFORM
@@ -386,6 +390,10 @@ public struct CredentialsManager {
                       self.hasScopeChanged(credentials, from: scope) else {
                     self.dispatchGroup.leave()
                     return callback(.success(credentials))
+                }
+                guard self.allowsAutoRefreshing else {
+                    self.dispatchGroup.leave()
+                    return callback(.failure(.renewNotSupported))
                 }
                 guard let refreshToken = credentials.refreshToken else {
                     self.dispatchGroup.leave()

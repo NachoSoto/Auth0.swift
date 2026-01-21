@@ -97,6 +97,12 @@ class CredentialsManagerErrorSpec: QuickSpec {
                 expect(error.localizedDescription) == message
             }
 
+            it("should return message for renew not supported") {
+                let message = "Credentials renewal is disabled."
+                let error = CredentialsManagerError(code: .renewNotSupported)
+                expect(error.localizedDescription) == message
+            }
+
             it("should return message for store failed") {
                 let message = "Storing the renewed credentials failed."
                 let error = CredentialsManagerError(code: .storeFailed)
