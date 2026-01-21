@@ -524,7 +524,7 @@ class CredentialsManagerSpec: QuickSpec {
                 it("should not renew if not enabled") {
                     credentialsManager = CredentialsManager(authentication: authentication,
                                                             storage: SimpleKeychain(),
-                                                            allowsAutoRefreshing: false)
+                                                            allowsTokenRenewal: false)
                     credentials = Credentials(accessToken: AccessToken, tokenType: TokenType, idToken: IdToken, refreshToken: RefreshToken, expiresIn: Date(timeIntervalSinceNow: -ExpiresIn))
                     _ = credentialsManager.store(credentials: credentials)
                     waitUntil(timeout: Timeout) { done in
